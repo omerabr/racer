@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Racer</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="str_btn_find">Find</string>
+    <string name="hnt_et_location">Enter location</string>
+    <string name="str_btn_start">Start</string>
+    <string name="str_btn_ready">Ready?</string>
+    <string name="str_btn_stop">Stop</string>
+    <string name="latitude_longitude"/>
+    <string name="navigation_drawer_open">open drawer</string>
+    <string name="navigation_drawer_close">close drawer</string>
+    <string-array name="nav_drawer_items">
+        <item >Settings</item>
+        <item >My Stats</item>
+        <item >My Awards</item>
+        <item >Ranking</item>
+    </string-array>
+</resources>
