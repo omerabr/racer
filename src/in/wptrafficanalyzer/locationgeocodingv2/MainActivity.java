@@ -2,12 +2,14 @@ package in.wptrafficanalyzer.locationgeocodingv2;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 import android.content.SharedPreferences;
 import android.app.ActionBar;
+import android.widget.ArrayAdapter;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.Notification;
@@ -34,6 +36,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SlidingPaneLayout.PanelSlideListener;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,11 +44,14 @@ import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationListener;
@@ -89,7 +95,15 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	RelativeLayout topPanel;
 	RelativeLayout statsPanel;
 	ProgressBar spinner;
-	
+	String[] mCount = new String[]{
+			 "", "", "", ""};
+	int[] mDrawerImages = new int[]{
+			 R.drawable.ic_settings,
+			 R.drawable.ic_stats,
+			 R.drawable.ic_medal,
+			 R.drawable.ic_podium
+			 };
+	private List<HashMap<String,String>> mList;
 	EditText etLocation;
 	Button btn_find;
 	Button btn_start;
@@ -109,7 +123,11 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     private String mConnectionStatus;
     private Handler mHandler = new Handler();
     private Long mStartTime;
+    private SimpleAdapter mAdapter;
     
+    private String[] mDrawerItems;
+    private ListView mDrawerList;
+   
     SharedPreferences mPrefs;
     SharedPreferences.Editor mEditor;
 
@@ -125,6 +143,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			
 			SupportMapFragment supportMapFragment = (SupportMapFragment) 
 					getSupportFragmentManager().findFragmentById(R.id.map);
+			
+			
 			
 			googleMap = supportMapFragment.getMap();
 			googleMap.getUiSettings().setCompassEnabled(false);
@@ -142,10 +162,27 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			statsPanel = (RelativeLayout) findViewById(R.id.stats_pnl);
 			mph = (EditText) findViewById(R.id.mph);
 			btnStop =(Button) findViewById(R.id.btn_stop);
+			
 			mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-					
-			// Setting button click event listener for the find button
-			btn_find.setOnClickListener(findClickListener);
+			mDrawerList = (ListView) findViewById(R.id.left_drawer);
+			mDrawerItems = getResources().getStringArray(R.array.nav_drawer_items);
+			
+			mList = new ArrayList<HashMap<String,String>>();
+			 for(int i=0;i<mDrawerItems.length;i++){
+				 HashMap<String, String> hm = new HashMap<String,String>();
+				 hm.put("item", mDrawerItems[i]);
+				 hm.put("icon", Integer.toString(mDrawerImages[i]) );
+				 mList.add(hm);
+			 }
+			 String[] from = { "icon","item"};
+			 
+			 int[] to = { R.id.flag , R.id.text1};
+			 
+			mAdapter = new SimpleAdapter(this, mList, R.layout.drawer_list_item, from, to);
+			mDrawerList.setAdapter(mAdapter);
+			mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+			
+			 btn_find.setOnClickListener(findClickListener);
 			btn_start.setOnClickListener(startClickListener);
 			btnREady.setOnClickListener(readyClickListener);
 			btnStop.setOnClickListener(stopClickListener);
@@ -797,7 +834,53 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 
 	    return super.onOptionsItemSelected(item);
 	}
-	
+	private class DrawerItemClickListener implements ListView.OnItemClickListener {
+	    @Override
+	    public void onItemClick(AdapterView parent, View view, int position, long id) {
+	        selectItem(position);
+	    }
+	}
+
+	/** Swaps fragments in the main content view */
+	private void selectItem(int position) {
+	    // Create a new fragment and specify the planet to show based on position
+//	    Fragment fragment = new PlanetFragment();
+//	    Bundle args = new Bundle();
+//	    args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
+//	    fragment.setArguments(args);
+
+	    // Insert the fragment by replacing any existing fragment
+//	    FragmentManager fragmentManager = getFragmentManager();
+//	    fragmentManager.beginTransaction()
+//	                   .replace(R.id.content_frame, fragment)
+//	                   .commit();
+
+	    // Highlight the selected item, update the title, and close the drawer
+	    mDrawerList.setItemChecked(position, true);
+	    //setTitle(mPlanetTitles[position]);
+	    mDrawerLayout.closeDrawer(mDrawerList);
+	}
+
+	@Override
+	public void setTitle(CharSequence title) {
+//	    mTitle = title;
+//	    getActionBar().setTitle(mTitle);
+	}
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent e) {
+	    if (keyCode == KeyEvent.KEYCODE_MENU) {
+	        // your action...
+
+	        if (!mDrawerLayout.isDrawerOpen(mDrawerList)) {
+	            mDrawerLayout.openDrawer(mDrawerList);
+	        }
+	        else{
+	        	mDrawerLayout.closeDrawer(mDrawerList);
+	        }
+	        return true;
+	    }
+	    return super.onKeyDown(keyCode, e);
+	}
 }
 
 
