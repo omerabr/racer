@@ -9,13 +9,31 @@
     <string name="str_btn_start">Start</string>
     <string name="str_btn_ready">Ready?</string>
     <string name="str_btn_stop">Stop</string>
-    <string name="latitude_longitude"/>
+    <string name="latitude_longitude" />
     <string name="navigation_drawer_open">open drawer</string>
     <string name="navigation_drawer_close">close drawer</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_speed_pref">Speed Metrics</string>
+	<string name="str_btn_connect">Connect</string>
+	<string name="title_activity_login">Connect with</string>
     <string-array name="nav_drawer_items">
-        <item >Settings</item>
-        <item >My Stats</item>
-        <item >My Awards</item>
-        <item >Ranking</item>
+        <item>Settings</item>
+        <item>My Stats</item>
+        <item>My Awards</item>
+        <item>Ranking</item>
     </string-array>
+
+    <string name="pref_title_screen">Screen Properties</string>
+
+    <string-array name="pref_speed_indi">
+        <item>MPH</item>
+        <item>KPH</item>
+    </string-array>
+    <string-array name="pref_speed_vals">
+        <item>MPH</item>
+        <item>KPH</item>
+    </string-array>
+
+
+
 </resources>

@@ -1,24 +1,23 @@
 package in.wptrafficanalyzer.locationgeocodingv2;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 import android.content.SharedPreferences;
 import android.app.ActionBar;
-import android.widget.ArrayAdapter;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -30,11 +29,9 @@ import android.support.v4.app.DialogFragment;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.SlidingPaneLayout.PanelSlideListener;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -47,7 +44,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -60,7 +57,6 @@ import com.google.android.gms.location.LocationClient;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.GoogleMap.OnCameraChangeListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.CameraPosition; 
@@ -81,6 +77,9 @@ public class MainActivity extends FragmentActivity implements
 LocationListener,
 GooglePlayServicesClient.ConnectionCallbacks,
 GooglePlayServicesClient.OnConnectionFailedListener{
+	
+	final private static String TAG = "MainFragment"  ;
+	final private static int LOGIN_ACTIVITY_CODE = 2013  ;
 	
 	List<LatLng> points;
 	GoogleMap googleMap;
@@ -109,11 +108,14 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	Button btn_start;
 	Button btnREady;
 	Button btnStop;
+	Button btnConnect;
 	EditText mph;
 	EditText etStopper;
 	Animation footerAnimate;
 	DrawerLayout mDrawerLayout;
 	ActionBarDrawerToggle mDrawerToggle;
+	ImageView imgProfilePic;
+	
 	private LocationRequest mLocationRequest;
     private LocationClient mLocationClient;
     private LatLng mLatLng;
@@ -124,10 +126,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
     private Handler mHandler = new Handler();
     private Long mStartTime;
     private SimpleAdapter mAdapter;
-    
+    private CharSequence mTitle; 
     private String[] mDrawerItems;
     private ListView mDrawerList;
-   
     SharedPreferences mPrefs;
     SharedPreferences.Editor mEditor;
 
@@ -140,9 +141,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			
 			setContentView(R.layout.activity_main);
 			
-			
 			SupportMapFragment supportMapFragment = (SupportMapFragment) 
 					getSupportFragmentManager().findFragmentById(R.id.map);
+			
 			
 			
 			
@@ -151,7 +152,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			googleMap.getUiSettings().setMyLocationButtonEnabled(true);
 			googleMap.setMyLocationEnabled(true);
 			
-			
+			imgProfilePic = (ImageView) findViewById(R.id.imgProfilePic);
 		    btn_find = (Button) findViewById(R.id.btn_find);
 			btn_start = (Button) findViewById(R.id.btn_start);
 			btnREady = (Button) findViewById(R.id.btn_ready);
@@ -161,7 +162,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			spinner = (ProgressBar) findViewById(R.id.spinner);
 			statsPanel = (RelativeLayout) findViewById(R.id.stats_pnl);
 			mph = (EditText) findViewById(R.id.mph);
-			btnStop =(Button) findViewById(R.id.btn_stop);
+			btnStop = (Button) findViewById(R.id.btn_stop);
+			btnConnect = (Button) findViewById(R.id.btn_connect);
 			
 			mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 			mDrawerList = (ListView) findViewById(R.id.left_drawer);
@@ -182,10 +184,12 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			mDrawerList.setAdapter(mAdapter);
 			mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 			
-			 btn_find.setOnClickListener(findClickListener);
+			btn_find.setOnClickListener(findClickListener);
 			btn_start.setOnClickListener(startClickListener);
 			btnREady.setOnClickListener(readyClickListener);
 			btnStop.setOnClickListener(stopClickListener);
+			btnConnect.setOnClickListener(connectClickListener);
+			
 			setUpDrawerToggle();
 			
 			etStopper.setEnabled(false);
@@ -221,18 +225,18 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	         */
 	        mLocationClient = new LocationClient(this, this, this);	
 			
-			//lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE); 
-			//RTlocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-		  	
+	        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+	        String ss = prefs.getString("speed_preference", "none");
+	        Toast.makeText(getApplicationContext(), ss, Toast.LENGTH_LONG).show();
+	        }
+	        
+        	
 			
-	    	//lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5000, 0, getOncelocationListener);
-	    	
-			}
 		    catch (Exception name){
 		    	String err = (name.getMessage()==null)?"":name.getMessage();
 				Log.e("MainActivity onCreate: ",err);
 			}
-	    
+		    
 	}
 
 	@Override
@@ -245,13 +249,15 @@ GooglePlayServicesClient.OnConnectionFailedListener{
          * instead, wait for onResume()
          */
         mLocationClient.connect();
+        
 
     }
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
-        // Choose what to do based on the request code
+		
+		// Choose what to do based on the request code
         switch (requestCode) {
 
             // If the request code matches the code sent in onConnectionFailed
@@ -280,6 +286,18 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 
                     break;
                 }
+            case LOGIN_ACTIVITY_CODE:
+            	switch (resultCode){
+            	 	case Activity.RESULT_OK:
+            	 		String picURL;
+            	 		if(!intent.getExtras().get("uri").equals("none")){
+            	 			picURL = (String)intent.getExtras().get("uri");
+            	 			new LoadProfileImage(imgProfilePic).execute(picURL);
+            	 		}
+            	 		else{
+            	 			imgProfilePic.setImageResource(android.R.color.transparent);
+            	 		}
+            	}
 
             // If any other request code was received
             default:
@@ -761,7 +779,14 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			
 		}
 	};
-	
+	OnClickListener connectClickListener = new OnClickListener() {
+		
+		@Override
+		public void onClick(View v) {
+			Intent intent = new Intent(getBaseContext(), LoginActivity.class);
+			startActivityForResult(intent, 2013);
+		}
+	};
 	private void setCameraOnMap(LatLng param, int zoom){
 		 CameraPosition cameraPosition = new CameraPosition.Builder().target(param)
 	                .zoom(zoom)
@@ -830,9 +855,17 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	    if (mDrawerToggle.onOptionsItemSelected(item)) {
 	      return true;
 	    }
+	    
+	    switch (item.getItemId()) {
+        // Handle home button in non-drawer mode
+        case android.R.id.home:
+        	 goBack();
+             return true;
+        default:
+            return super.onOptionsItemSelected(item);
+	    }
 	    // Handle your other action bar items...
 
-	    return super.onOptionsItemSelected(item);
 	}
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
 	    @Override
@@ -844,33 +877,40 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	/** Swaps fragments in the main content view */
 	private void selectItem(int position) {
 	    // Create a new fragment and specify the planet to show based on position
-//	    Fragment fragment = new PlanetFragment();
-//	    Bundle args = new Bundle();
-//	    args.putInt(PlanetFragment.ARG_PLANET_NUMBER, position);
-//	    fragment.setArguments(args);
+		PrefsFragment fragment;
+		
+		if (position == 0) {
+	    	fragment = new PrefsFragment();
+		}
+		else{
+			return;
+		}
 
 	    // Insert the fragment by replacing any existing fragment
-//	    FragmentManager fragmentManager = getFragmentManager();
-//	    fragmentManager.beginTransaction()
-//	                   .replace(R.id.content_frame, fragment)
-//	                   .commit();
-
+	    android.app.FragmentManager fragmentManager = getFragmentManager();
+ 	    fragmentManager.beginTransaction()
+ 	    			   .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+ 	                   .replace(R.id.content_frame, fragment)
+ 	                   .addToBackStack(null)
+ 	                   .commit();
 	    // Highlight the selected item, update the title, and close the drawer
-	    mDrawerList.setItemChecked(position, true);
-	    //setTitle(mPlanetTitles[position]);
+ 	   
+ 	    mDrawerToggle.setDrawerIndicatorEnabled(false);
+ 	    mDrawerList.setItemChecked(position, true);
+	    setTitle(mDrawerItems[position]);
 	    mDrawerLayout.closeDrawer(mDrawerList);
 	}
 
 	@Override
 	public void setTitle(CharSequence title) {
-//	    mTitle = title;
-//	    getActionBar().setTitle(mTitle);
+		mTitle = title;
+		getActionBar().setTitle(mTitle);
 	}
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent e) {
-	    if (keyCode == KeyEvent.KEYCODE_MENU) {
-	        // your action...
-
+		    
+		if (keyCode == KeyEvent.KEYCODE_MENU) {
+	        
 	        if (!mDrawerLayout.isDrawerOpen(mDrawerList)) {
 	            mDrawerLayout.openDrawer(mDrawerList);
 	        }
@@ -879,8 +919,67 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	        }
 	        return true;
 	    }
+	   
 	    return super.onKeyDown(keyCode, e);
 	}
-}
 
+	@Override
+	public void onBackPressed()
+	{
+	  	if(mDrawerLayout.isDrawerOpen(mDrawerList)){
+	  		mDrawerLayout.closeDrawer(mDrawerList);
+    		return;
+    	}
+	  	if(getActionBar().getTitle().toString().equals("Settings")){
+	  		goBack();
+	  		return;
+	  	}
+	  	super.onBackPressed();  // optional depending on your needs
+	}
+	private void goBack(){
+		getFragmentManager().popBackStack();
+        //make sure transactions are finished before reading backstack count
+        getFragmentManager().executePendingTransactions();
+        if (getFragmentManager().getBackStackEntryCount() < 1){
+            mDrawerToggle.setDrawerIndicatorEnabled(true);
+            mDrawerList.clearChoices();
+
+            for (int i = 0; i < mDrawerList.getCount(); i++) {
+            	mDrawerList.setItemChecked(i, false);
+            }
+            getActionBar().setTitle(R.string.app_name);
+        }
+	}
+	public void updateUserImage()
+	{
+		
+	}
+	
+	private class LoadProfileImage extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+ 
+        public LoadProfileImage(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+ 
+        protected Bitmap doInBackground(String... urls) {
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new java.net.URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+            return mIcon11;
+        }
+ 
+        protected void onPostExecute(Bitmap result) {
+            
+        	bmImage.setImageBitmap(result);
+        }
+    }
+	
+}
 

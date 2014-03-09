@@ -17,11 +17,7 @@
 package in.wptrafficanalyzer.locationgeocodingv2;
 
 import com.google.android.gms.maps.model.LatLng;
-
-import android.content.Context;
 import android.location.Location;
-
-import in.wptrafficanalyzer.locationgeocodingv2.R;
 
 /**
  * Defines app-wide constants and utilities
@@ -29,7 +25,7 @@ import in.wptrafficanalyzer.locationgeocodingv2.R;
 public final class LocationUtils {
 
     // Debugging tag for the application
-    public static final String APPTAG = "LocationSample";
+    public static final String APPTAG = "Location";
 
     // Name of shared preferences repository that stores persistent state
     public static final String SHARED_PREFERENCES =
